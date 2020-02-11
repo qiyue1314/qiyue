@@ -1,0 +1,701 @@
+◆织梦内容管理系统模板标签代码参考
+搜狗simp：zhanzhang.sogou.com/index.php/sitemap/create/id/7565127
+
+【Arclist 标记】
+　　这个标记是DedeCms最常用的一个标记，也叫自由列表标记，其中 hotart、coolart、likeart、artlist、imglist、imginfolist、specart、autolist 这些标记都是由这个标记所定义的不同属性延伸出来的别名标记。
+功能说明：获取指定的文档列表
+适用范围：封面模板、列表模板、文档模板
+基本语法：
+{dede:arclist typeid='' row='' col='' titlelen='' infolen=''
+imgwidth='' imgheight='' listtype='' orderby='' keyword=''}
+
+底层模板(InnerText)
+{/dede:arclist}
+属性说明：
+[1] typeid='' 表示栏目ID，在列表模板和档案模板中一般不需要指定，在封面模板中允许用","分开表示多个栏目；
+[2] row='' 表示返回文档列表总数；
+[3] col='' 表示分多少列显示（默认为单列）；
+[4] titlelen='' 表示标题长度；
+[5] infolen='' 表示内容简介长度；
+[6] imgwidth='' 表示缩略图宽度；
+[7] imgheight='' 表示缩略图高度；
+[8] type='' 表示档案类型，其中空值、不使用这个属性或type='all'时为普通文档
+§ type='commend'时，表示推荐文档，等同于 {dede:coolart}{/dede:coolart}
+§ type='image'时，表示必须含有缩略图片的文档，等同于{dede:imglist}{/dede:imglist}、{dede:imginfolist}{/dede:imginfolist}
+§ type='spec'时，表示专题，等同于标记{dede:specart}{/dede:specart}
+以上属性值可以联合使用，如： type='commend image' 表示推荐的图片文档
+[9] orderby='' 表示排序方式，默认值是 senddate 按发布时间排列。
+§ orderby='hot' 或 orderby='click' 表示按点击数排列
+§ orderby='pubdate' 按出版时间排列（即是前台允许更改的时间值）
+§ orderby='sortrank' 按文章的新排序级别排序（如果你想使用置顶文章则使用这个属性）
+§ orderby='id' 按文章ID排序
+§ orderby='postnum' 按文章评论次数排序
+§ orderby='rand' 随机获得指定条件的文档列表
+[10] orderway='' 值为 desc 或 asc ，指定排序方式是降序还是顺向排序，默认为降序。
+[11] keyword='' 表示含有指定关键字的文档列表，多个关键字用","分开
+[12] channelid='' 表示特定的频道模型ID，内置的频道：专题(-1)、文章(1)、图集(2)、Flash(4)、软件(3)
+[13] limit='起始,结束' 表示限定的记录范围，row属性必须等于"结束 - 起始"，mysql的limit语句是由0起始的，如 “limit 0,5”表示的是取前五笔记录，“limit 5,5”表示由第五笔记录起，取下五笔记录，使用了本属性后，row属性将无效。
+[14] att='数值' 表示自定义属性值
+[15] subday='天数' 表示在多少天以内的文档，通常用于获取指定天数的热门文档、推荐文档、热门评论文档等
+[16] partsort='排列位数' 表示自动获得父栏目的所有子数中排列在第几位的栏目ID，标记为 {dede:autolist}{/dede:autolist} 时，使用本属性才有效。
+底层模板字段：
+ID(同 id),title,iscommend,color,typeid,ismake,description(同 info),writer,shorttitle,memberid
+pubdate,senddate,arcrank,click,litpic(同 picname),typedir,typename,
+arcurl(同 filename),typeurl,stime(pubdate 的"0000-00-00"格式),
+textlink,typelink,imglink,image
+
+其中：
+textlink = <a href='arcurl'>title</a>
+typelink = <a href='typeurl'>typename</a>
+imglink = <a href='arcurl'><img src='picname' border='0' width='imgwidth' height='imgheight'></a>
+image = <img src='picname' border='0' width='imgwidth' height='imgheight'>
+
+
+字段调用方法： 
+如：
+{dede:arclist infolen='100'}
+[field:textlink/]
+<br>
+[field:info/]
+<br>
+{/dede:arclist}
+
+注：底层模板里的Field实现也是织梦标记的一种形式，因此支持使用PHP语法，Function扩展等功能
+如： 给当天发布的内容加上 (new) 标志
+[field:senddate runphp='yes']
+$ntime = time();
+$oneday = 3600 * 24;
+if(($ntime - @me)<$oneday) @me = "<font color='red'>(new)</font>";
+else @me = "";
+[/field:senddate]
+
+
+
+【Field 标记】
+
+功能说明：用于获取特定栏目或档桉的字段值及常用的环境变量值
+适用范围：封面模板、列表模板、文档模板
+(1)基本语法
+{dede:field name='字段名'/}
+(2) 系统分配的field
+板块模板：phpurl,indexurl,indexname,templeturl,memberurl,powerby,webname,specurl
+列表模板：position,title,phpurl,templeturl,memberurl,powerby,indexurl,indexname,specurl,栏目表dede_arctype的所有字段
+其中 position 为 “栏目一 > 栏目二” 这样形式的链接，title则为这种形式的标题
+文档模板：position,phpurl,templeturl,memberurl,powerby,indexurl,indexname,specurl,id(同 ID,aid)
+(3) 文档所有内容字段
+档案dede_archives表 和 附加表的所有字段。
+
+【Channel 标记】
+
+
+功能说明：用于获取栏目列表
+适用范围：封面模板、列表模板、文档模板
+(1)基本语法
+{dede:channel row='' type=''}
+自定义样式模板(InnerText)
+{/dede:channel}
+(2)属性
+[1] row='数字' 表示获取记录的条数（通用在某级栏目太多的时候使用，默认是 8）
+[2] type = top,sun/son,self
+type='top' 表示顶级栏目
+type='son' 或 'sun' 表示下级栏目
+type='self' 表示同级栏目
+其中后两个属性必须在列表模板中使用。
+(3)底层模板变量
+ID,typename,typedir,typelink(仅表示栏目的网址)
+例：
+{dede:channel type='top'}
+<a href='[field:typelink /]'>[field:typename/]</a>
+{/dede:channel}
+注：在没有指定typeid的情况下，type标记与模板的环境有关，如，模板生成到栏目一，那么type='son'就表示栏目一的所有子类
+
+【Type 标记】别名 onetype
+
+功能说明：表示指定的单个栏目的链接
+适用范围：封面模板、列表模板、文档模板
+(1)语法 {dede:type typeid=''}{/dede:type}
+(2)属性 typeid='栏目ID'
+(3)底层模板变量
+typename,typelink(仅表示栏目的网址)
+
+【Autochannel 标记】
+功能说明：表示指定排序位置的单个栏目的链接
+适用范围：封面模板、列表模板、文档模板
+(1)语法 {dede:autochannel partsort=''}{/dede:autochannel}
+(2)属性 partsort='栏目所在的排序位置'
+(3)底层模板变量
+typename,typelink(仅表示栏目的网址)
+
+【Mytag 标记】
+
+功能说明：用于获取自定义宏标记的内容
+适用范围：封面模板、列表模板、文档模板
+(1)基本语法
+{dede:mytag typeid='' name='' ismake=''/}
+(2)属性
+[1] typeid = '数字' 表示栏目ID，默认为 0，在没有设定的栏目没有定义这个名称的标记，会按如下搜索方式来搜索“先向上查找父栏目 -> 通用标记（typeid=0）的同名标记”。
+[2] name = '' 标记名称。
+[3] ismake = yes|no 默认为 no 表示mytag里的内容不包含其它封面模板的标记，yes则表示标记内容含有其它封面模板标记。
+
+【Vote 标记】
+
+功能说明：用于获取一组投票表单
+适用范围：封面模板
+(1) 基本语法
+{dede:vote id='投票ID' lineheight='22'
+tablewidth='100%' titlebgcolor='#EDEDE2'
+titlebackground='' tablebgcolor='#FFFFFF'}
+{/dede:vote}
+注：本标记直接生成投票的HTML表单，为了让你更方便修改其样式，建议在后台->投票管理的地方直接复制生成的HTML代码来使用。
+
+【Flink 标记】，等同 friendlink
+
+功能说明：用于获取友情链接
+适用范围：封面模板
+(1)基本语法
+{dede:flink type='' row='' col='' titlelen='' tablestyle=''}{/dede:flink}
+(2)属性
+[1]type：链接类型，值：
+a. textall 全部用文字显示
+b. textimage 文字和图得混合排列
+c. text 仅显示不带Logo的链接
+d. image 仅显示带Logo的链接
+-------------------------------------
+[2]row：显示多少行，默认为4行
+[3]col：显示多少列，默认为6列
+[4]titlelen：站点文字的长度
+[5]tablestyle： 表示 <table 这里的内容>
+
+【Mynews 标记】
+功能说明：用于获取站内新闻
+适用范围：封面模板
+(1) 基本语法
+{dede:mynews row='条数' titlelen='标题长度'}Innertext{/dede:mynews}
+(2)属性
+[1] row 新闻条数
+[2] titlelen 标题长度
+(3)底层模板变量
+[field:title/]、[field:writer/]、
+[field:senddate function="strftime('%y-%m-%d %H:%M',@me)"/](时间)、[field:body/]
+
+
+【LOOP 标记】
+
+功能说明：用于调用任意表的数据，一般用于调用论坛贴子之类的操作
+适用范围：所有模板
+(1) 基本语法
+{dede:loop table=' sort='' row='' if=''}
+底层模板
+{/dede:loop}
+(2) 属性
+[1] table 表示查询的数据表
+[2] sort 用于排序的字段
+[3] row 返回结果的条数
+[4] if 查询条件
+(3)底层模板变量
+这个标记的底层模板变量即是被查询表的所有字段
+例：获取Phpwind论坛的最新主题贴子
+
+{dede:loop table='pw_threads' sort='tid' row='8' if=''}<br>
+<a href="/bbs/read.php?tid=[field:tid/]"> ·[field:subject function="cn_substr('@me',30)"/]
+([field:lastpost function="date('m-d H:M','@me')"/])</a> <br/>
+{/dede:loop}
+
+
+【Channelartlist 标记】
+
+功能说明：用于获取当前频道的下级栏目的内容列表
+适用范围：封面模板
+
+(1)基本语法
+{dede:channelArtlist typeid=0 col=2 tablewidth='100%'}
+<table width="99%" border="0" cellpadding="3" cellspacing="1" bgcolor="#BFCFA9">
+<tr>
+<td bgcolor="#E6F2CC">
+{dede:type}
+<table border="0" cellpadding="0" cellspacing="0" width="98%">
+<tr>
+<td width='10%' align="center"><img src='[field:global name='cfg_plus_dir'/]/img/channellist.gif' width='14' height='16'></td>
+<td width='60%'>
+<a href="[field:typelink /]">[field:typename /]</a>
+</td>
+<td width='30%' align='right'>
+<a href="[field:typelink /]">更多...</a>
+</td>
+</tr>
+</table>
+{/dede:type}
+</td>
+</tr>
+<tr>
+<td height="150" valign="top" bgcolor="#FFFFFF">
+{dede:arclist row="8"}
+·<a href="[field:arcurl /]">[field:title /]</a><br>
+{/dede:arclist}
+</td>
+</tr>
+</table>
+<div style='font-size:2px'>&nbsp;</div>
+{/dede:channelArtlist}
+
+除了宏标记外，channelArtlist 是唯一一个可以直接嵌套其它标记的标记，不过仅限于嵌套
+{dede:type}{/dede:type} 和 {dede:arclist}{/dede:arclist} 两个标记。
+(2) 属性
+[1]typeid=0 频道ID,默认的情况下，嵌套的标记使用的是这个栏目ID的下级栏目，如果你想用特定的栏目，可以用","分开多个ID。
+[2]col=2 分多列显示
+[3]tablewidth='100%' 外围表格的大小
+
+【List 标记】
+功能说明：表示列表模板里的分页内容列表
+适用范围：仅列表模板 list_*.htm
+
+(1)基本语法
+{dede:list col='' titlelen=''
+infolen='' imgwidth='' imgheight='' orderby='' pagesize=''}{/dede:list}
+
+(2)属性
+[1]col 内容列数
+[2]titlelen 标题长度
+[3]infolen 内容摘要长度
+[4]imgwidth 缩略图宽
+[5]imgheight 缩略图高
+[6]orderby 排序方式，有效的排序方式有 senddate、pubdate、id、click、lastpost、postnum ，默认为 sortrank
+[7]pagesize 分页大小
+
+(3)底层模板变量
+ID(同 id),title,iscommend,color,typeid,ismake,description(同 info),postnum,lastpost,shorttitle
+pubdate,senddate,arcrank,click,litpic(同 picname),typedir,typename,
+arcurl(同 filename),typeurl,stime(pubdate 的"0000-00-00"格式),
+textlink,typelink,imglink,image
+
+注：list标记除了支持档案表的基本模板变量外，还支持附加表的字段，你可以在模型管理中知道附加表支持列表使用的字段有哪些。
+
+【Page 标记】
+功能说明：表示分页页面的附加参数
+适用范围：列表模板
+语法： {dede:page pagesize="每页结果条数"/}
+注：此标记在dedecms3.1中已经过期，dedecms3.1中直接把 pagesize属性加在 list 标记中，表示记录分页大小。
+
+【Pagelist 标记】
+功能说明：表示分页页码列表
+适用范围：列表模板
+
+(1)语法
+{dede:pagelist listsize='3' listitem=''/}
+(2)属性
+[1] listsize 表示 [1][2][3] 这些项的长度 x 2
+[2] listitem 表示页码样式，可以把下面的值叠加
+index　　首页
+pre 上一页
+pageno 页码
+next 下一页
+end 末页
+option 下拉跳转框
+
+例： {dede:pagelist listsize='3' listitem='index pre pageno next end option'/}
+
+【Pagebreak 标记】
+
+功能说明：表示文档的分页链接列表。
+适用范围：仅文档模板。
+语法：{dede:pagebreak/}
+
+【Prenext 标记】
+
+功能说明：表示获取文档“上一篇／下一篇”的链接列表。
+适用范围：仅文档模板。
+(1)语法：{dede:prenext/}
+(2)属性：
+[1] get 获取连接类型（仅2007版），get='' 同V4显示横排的上下页连接， get='pre' 上一篇的连接 get='next' 下一篇连接
+注：此标记默认为横向排列，如果你想用竖向排列，可以用
+{dede:prenext function="str_replace(' 下一篇：','<'.'br'.' />下一篇：',@me)"/}
+表示
+
+【Pagetitle 标记】
+
+功能说明：表示获取文档的分页标题
+适用范围：仅文档模板。
+(1)语法：{dede:pagetitle style='select'/}
+(2)属性：style 表示分页标题的展示样式
+select 表示下拉框、link 表示文字直接链接
+
+【Fieldlist 标记】
+功能说明：获得附加表的所有字段信息。
+适用范围：仅文档模板。
+语法：
+{dede:fieldlist}
+[field:name/] ： [field:value/] <br>
+{/dede:fieldlist}
+
+【Myad 标记】
+功能说明：获取广告代码
+适用范围：所有模板。
+建议在广告管理模块中获取，在此不作描述
+
+##############################################################
+## 以下仅适用于DedeCms2007版
+##############################################################
+
+【Ask 标记】
+
+功能说明：用于获取最新的问答的主题。
+适用范围：非扩展模块所有模板。
+(1)语法：{dede:ask row='' qtype=''}底层模板{/dede:ask}
+(2)属性：
+[1] row 记录条数。
+[2] qtype 类型 默认为新回复问题，commend推荐问题 ok已解决问题 high高分问题
+(3)底层模板：
+<dd>
+<span class="tclass">[<a href='[field:typeurl/]'>[field:tidname/]</a>]</span>
+<span class="tlink"><a href="[field:url/]">[field:title/]</a></span>
+</dd>
+
+[field:typeurl/] 栏目网址 [field:tidname/] 栏目名称
+[field:url/] 问题网址 [field:title/] 问题标题 [field:id/] 问题id
+
+【Sql 标记】
+
+功能说明：用于从模板中用一个SQL查询获得其返回内容。
+适用范围：非扩展模块所有模板。
+(1)语法：{dede:sql sql=""}底层模板{/dede:sql}
+(2)属性：
+[1] sql 完整的SQL查询语句。
+(3)底层模板：
+SQL语句中查出的所有字段都可以用[field:字段名/]来调用。
+
+
+【Group 标记】
+
+功能说明：获取特定条件的圈子。
+适用范围：非扩展模块所有模板。
+(1)语法：{dede:group row="个数" orderby='排序条件' }底层模板{/dede:group}
+(2)属性：
+[1] row 返回结果个数。
+[2] orderby 排序条件，一般为： 默认 threads 发贴量， members 会员数， hits 浏览量， stime 创建时间。
+(3)底层模板：
+[field:url/]圈子网址 [field:groupname/]圈子名称 [field:icon/]圈子图标 [field:groupid/] 圈子ID
+
+【Groupthread 标记】
+
+功能说明：获取圈子最新发表的主题。
+适用范围：非扩展模块所有模板。
+(1)语法：{dede:groupthread gid='' row='' orderby='' orderway=''}底层模板{/dede:groupthread}
+(2)属性：
+[1] gid='' 圈子分类，为空或0刚表示所有分类
+[2] row='' 条数
+[3] orderby='' 排序条件 默认 dateline
+[4] orderway=' 排序方向 desc 或 asc
+(3)底层模板：
+[field:url/]圈子网址 [field:groupname/]圈子名称 [field:icon/]圈子图标 [field:groupid/] 圈子ID
+
+【booklist 标记】
+
+功能说明：用于获取最新连载图书。
+适用范围：连载书库。
+(1)语法：{dede:booklist row='' booktype='' titlelen='' orderby='' catid='' author='' imgwidth='' imgheight=''}底层模板{/dede:booklist}
+(2)属性：
+[1] row='' 行数
+[2] booktype='' 图书类型 1 漫画，0 小说， -1 或默认 全部
+[3] titlelen='' 标题长度
+[4] orderby='' 排序
+[5] catid='' 栏目ID
+[6] author='' 作者
+[7] imgwidth=''
+[8] imgheight=''
+
+(3)底层模板：
+contenttitle,contentid,contenturl,dmbookurl,bookurl,catalogurl,cataloglink,booklink,contentlink,imglink,ischeck,booktypename
+
+【catalog 标记】
+
+功能说明：用于获取书库的栏目。
+适用范围：连载书库。
+(1)语法：{dede:catalog type=''}底层模板{/dede:catalog}
+(2)属性：
+[1] type 类型 默认为顶级栏目，type=son 表示当前栏目的子栏目，指定特定的栏目id则为所指定的栏目。
+(3)底层模板：
+本标记支持in嵌套，里面的in标记还可以再使用一重样式
+{dede:catalog}
+<dd><a href="{in:field name='url'}{/in:field}">{in:field name='classname'}{/in:field}</a></dd>
+{/dede:catalog}
+列出所有分类：
+{dede:catalog}
+<div class="book_class_form">
+<dl>
+<dt><a href="{in:field name='url'}{/in:field}">{in:field name='classname'}{/in:field}：</a></dt>
+{in:sonlist}<dd> <a href='[field:url/]'>[field:classname/]</a></dd>{/in:sonlist}
+</dl>
+<div class="clear">
+</div>
+</div>
+{/dede:catalog}
+
+
+【chapter 标记】
+
+功能说明：用于获取图书的章节列表，适用于book_book.htm。
+适用范围：连载书库。
+(1)语法：{dede:chapter}底层模板{/dede:chapter}
+(2)属性：
+(3)底层模板：
+url 网址 ch 章节 title 标题
+
+【contentlist 标记】
+
+功能说明：用于获取最新图书章节。
+适用范围：连载书库。
+(1)语法：{dede:contentlist row='' booktype='' titlelen='' catid=''}底层模板{/dede:contentlist}
+(2)属性：
+[1] row 条数
+[2] booktype 图书类型 1 漫画，0 小说， -1 或默认 全部
+[3] titlelen
+[4] catid 栏目ID
+(3)底层模板：
+contenttitle,contentid,contenturl,dmbookurl,bookurl,catalogurl,cataloglink,booklink,contentlink,imglink,ischeck,booktypename
+本标记实际是由booklist引申的，不同之处是按book的最新发表章节排序
+
+
+Power by Dedecms.com 版权所有
+
+一、织梦网站常用模板Head区域标签
+首页[Head]区域：
+标题[Title]：{dede:global.cfg_webname/}
+关键词[keywords]：{dede:global.cfg_keywords/}
+描述[description]：{dede:global.cfg_description/}
+列表页[Head]区域：
+标题[Title]：{dede:field.title/}_{dede:global.cfg_webname/}
+关键词[keywords]：{dede:field name='keywords'/}
+描述[description]：{dede:field name='description' function='html2text(@me)'/}
+文章页[Head]区域：
+标题[Title]：{dede:field.title/}_{dede:global.cfg_webname/}
+关键词[keywords]：{dede:field.keywords/}
+描述[description]：{dede:field.description function='html2text(@me)'/}
+织梦首页[Head]区域完整调用标签：
+{dede:global.cfg_webname/}
+织梦列表页[Head]区域完整调用标签：
+{dede:field.title/}_{dede:global.cfg_webname/}
+织梦文章页[Head]区域完整调用标签：
+{dede:field.title/}_{dede:global.cfg_webname/}
+二、织梦网站栏目标题写法：二级栏目_一级栏目_网站名称
+{dede:field name='position' runphp='yes'}
+$tc="_"; //分隔符
+$tw=$GLOBALS['cfg_list_symbol']; //调用位置分隔符
+@me=html2text(@me); //去除html标签
+=split(,@me); //分解成数组
+for($ta=(count($tf)-2);$ta>=1;$ta--){ //循环赋值给$tk\.=trim($tf[$ta]).$tc;}
+$tk=substr($tk,0,-1);
+@me=$tk; //赋值给@me
+{/dede:field} _{dede:global name='cfg_webname'/}
+三、织梦网站文章标题写法：文章标题_栏目标题(二级栏目_一级栏目)_网站名称
+{dede:field name='title'/}_{dede:field name='position' runphp='yes'}
+$tc="_"; //分隔符
+$tw=$GLOBALS['cfg_list_symbol']; //调用位置分隔符
+@me=html2text(@me); //去除html标签
+=split(,@me); //分解成数组
+for($ta=(count($tf)-2);$ta>=1;$ta--){ //循环赋值给$tk\.=trim($tf[$ta]).$tc;}
+$tk=substr($tk,0,-1);
+@me=$tk; //赋值给@me
+{/dede:field} _{dede:global name='cfg_webname'/}
+四、织梦网站系统基本配置标签：
+1、站点根网址：{dede:global.cfg_basehost/}
+2、主页链接：{dede:global.cfg_indexurl/}
+3、网站编码：{dede:global.cfg_soft_lang/}
+4、CMS版本：{dede:global.cfg_version/}
+5、头部调用：{dede:include filename="head.htm"/}
+6、网站备案：{dede:global.cfg_beian/}
+7、版权信息：{dede:global.cfg_powerby/}
+8、网站风格：{dede:global.cfg_templets_skin/}
+9、CMS版权：{dede:global.cfg_powerby/}
+10、底部调用：{dede:include filename="footer.htm"/}
+11、主页链接名称：{dede:global.cfg_indexname/}
+12、图片路径：{dede:global.cfg_templets_skin/}/images/
+13、css路径：{dede:global.cfg_templets_skin/}/style/
+五、网站首页常用标签：
+1、织梦导航调用标签：
+主页
+{dede:channel type='top' row='10' currentstyle="
+~typename~"}
+[field:typename/]
+{/dede:channel}
+
+2、导航底层模板标签
+（01）栏目名称：[field:typename/]
+（02）栏目链接：[field:typelink/]
+3、文章调用标签
+{dede:arclist row="5" typeid="1" flag='h' titlelen="32" infolen="5" limit="10"}
+[[field:typename/]][field:title /]
+{/dede:arclist}
+
+文章
+（01）按照发布时间排列：orderby="pubdate"
+（02）按照点击次数排列：orderby="click"
+（03）按照最后评论排列：orderby="lastpost"
+（04）按照文章编号排列：orderby="id"
+（05）按照随机顺序排列：orderby="rand"
+（06）按照得分大小排列：orderby="scores"
+4、文章常用调用属性标签：
+（01）头条：h
+（02）推荐：c
+（03）图片：p
+（04）幻灯：f
+（05）滚动：s
+（06）跳转：j
+（07）特荐：a
+（08）加粗：b
+六、织梦网站友情链接标签:
+1、文字链接格式：
+{dede:flink row="24" titlelen=10 linktype="2" type="text" }
+{dede:flink/}
+{/dede:flink}
+
+2、图片连接格式
+{dede:flink row="24" titlelen=10 linktype="2" type="image" }
+{dede:flink/}
+{/dede:flink}
+
+七、文章列表调用标签：
+1、常用文章列表调用形式：
+{dede:list pagesize="10"}
+[[field:typelink/]][field:title/]
+{/dede:list}
+2、列表页底层模板标签
+（01）所属栏目：[field:typelink/]
+（02）文章标题：[field:title/]
+（03）文章链接：[field:arcurl/]
+（04）点击次数：[field:click/]
+（05）文章描述：[field:description/]
+（06）缩略图片：[field:picname/]
+（07）带图链接：[field:imglink/]
+（08）日期调用：[field:pubdate function="GetDateTimeMK(@me)" /]和[field:pubdate function="MyDate('Y-m-d',@me)"/]
+（09）软件语言：[field:language/]
+（10）好评数目：[field:scores/]
+（11）推荐级别：[field:softrank function='GetRankStar(@me)'/]
+（12）完整标题：[field:fulltitle/]
+（13）缩略小图：[field:litpic]
+（14）原图调用：{dede:field.image/}
+（15）描述调用：[field:info /]
+（16）列表标签：{dede:tag row='80' getall='1' sort='month'}[field:tag /]
+3、列表页页码分页调用标签:
+{dede:pagelist istitem="index,pre,next,end,option,info," listsize="5"/}
+八、织梦内容页调用标签：
+1、文章模型内容页标签：
+（01）文章标题：{dede:field.title/}
+（02）文章链接：{dede:field name='arcurl'/}
+（03）分秒发布时间：{dede:field.pubdate function="MyDate('Y-m-d H:i',@me)"/}
+（04）文章来源：{dede:field.source/}
+（05）文章作者：{dede:field.writer/}
+（06）责任编辑：{dede:adminname/}
+（07）文章简介：{dede:field.description}
+（08）正文内容：{dede:field.body/}
+（09）当前栏目：{dede:field name='typename'/}
+（10）单页内容：{dede:field.content/}
+（11）文章标签：{dede:tag type='current'/}或{dede:tag row='30' sort='new' getall='0'} [field:tag /]{/dede:tag}
+（12）点击次数：
+2、图片模型内容页标签
+（01）图片列表开始：{dede:productimagelist}
+（02）图片列表结束：{/dede:productimagelist}
+（03）图片显示：[field:imgsrc/]
+（04）图片链接：javascript:ChangePic('[field:imgsrc/]', '#bigpicimg');
+（05）图集缩略图：{dede:field name='image'/}
+（06）图片标题：[field:text/]
+3、下载模型内容页标签
+（01）软件类型：{dede:field.softtype/}
+（02）授权方式：{dede:field.accredit/}
+（03）界面语言：{dede:field.language/}
+（04）软件大小：{dede:field.softsize/}
+（05）文件类型：{dede:field.filetype/}
+（06）运行环境：{dede:field.os/}
+（07）软件等级：{dede:field.softrank function='GetRankStar(@me)'/}
+（08）发布时间：{dede:field.pubdate function="MyDate('Y-m-d H:i',@me)"/}
+（09）官方网址：{dede:field.officialurl/}
+（10）演示地址：{dede:field.officialdemo/}
+（11）下载次数：{dede:field.officialdemo/}
+（12）软件图片：{dede:field name='image'/}
+（13）下载地址：{dede:field name='softlinks'/}
+（14）软件介绍：{dede:field.introduce/}
+（15）下载说明：{dede:softmsg/}
+4、文章页通用标签：
+（01）当前位置：{dede:field name='position'/}
+（02）上一页：{dede:prenext get='pre'/}
+（03）下一页：{dede:prenext get='next'/}
+（04）收藏：收藏
+（05）挑错：挑错
+（06）推荐：推荐
+（07）打印：打印
+九、织梦CMS经典SQL调用标签代码
+1、共有文章：*篇：{dede:sql sql="select count(*) as c from dede_archives where channel=1"}共有文章：[field:c /]篇{/dede:sql}
+2、共有图集：*个：{dede:sql sql="select count(*) as c from dede_archives where channel=2"}共有图集：[field:c /]个{/dede:sql}
+3、共有软件：*个：{dede:sql sql="select count(*) as c from dede_archives where channel=3"}共有软件：[field:c /]个{/dede:sql}
+4、共有评论：*条：{dede:sql sql="select count(*) as c from dede_feedback"}共有评论：[field:c /]条{/dede:sql}
+5、共有会员：*名：{dede:sql sql="select count(mid) as c from dede_member"}共有会员：[field:c /]名{/dede:sql}
+6、今日更新：*篇：{dede:sql sql="SELECT count( * ) AS c FROM dede_archives WHERE pubdate > UNIX_TIMESTAMP( CURDATE( ) ) "}今日更新：[field:c /]篇{/dede:sql}
+7、总共留言：*条：总共留言：{dede:sql sql="select count(*) as cc From dede_guestbook"}[field:cc/]{/dede:sql}条
+8、文章阅读：*人：{dede:sql sql="select sum(click) as c from dede_archives"}文章阅读：[field:c /]人次{/dede:sql}
+
+十、首页调用指定栏目的子栏目：
+{dede:channel type='sun' typeid='栏目ID'}
+[field:typename/]
+{/dede:channel}
+
+
+◆以上就是织梦内容管理系统模板标签代码大全！大家参考，喜欢的话收藏下哦，更多关注-七月博客:
+织梦文章页面图片slq调用为缩略图：
+update dede_archives,dede_addonarticle set
+dede_archives.litpic=substring(dede_addonarticle.body,INSTR(dede_addonarticle.body,'src="')+5,100)
+where dede_archives.id=dede_addonarticle.aid;
+update dede_archives set litpic=substring(litpic,1,instr(litpic,'"' )-1);
+
+
+织梦文章页面调用当前文章链接调用：
+<p> 版权保护: 本文由 {dede:field.title/} 文章，转载请保留链接: <a href='{dede:field name='arcurl'/}'>http://www.aaxjj.com{dede:field name='arcurl'/}</a></p>
+
+
+tag标签调用：
+{dede:tag row='10' getall='1' sort='rand'/} 
+ <li><a href='[field:link/]'>[field:tag/]</a></li>     
+ {/dede:tag}
+
+
+tag标签tag调用参数说明：
+row='30' 调用条数为30条
+sort='new' 排序方式month，rand，week
+getall='0' 获取类型0为当前内容页TAG标记，1为获取全部TAG标记。
+底层模板字段：link,tag
+视频代码
+<iframe src="https://image4.vipc.cn/video/5e40aa02f708df0012d5ba94.mp4" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
+
+IPcmd  本地IP自查
+使用Win+R打开运行界面输入cmd点确定，在新弹框中输入ipconfig查看自己的ipv4的地址
+
+域名直接跳转代码
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<script language="javascript" type="text/javascript">
+		
+		window.location="http://yabo.yabob.cc";;</script>
+		<title>跳转中</title>
+	</head>
+	<body>
+	</body>
+</html>
+
+
+
+robots.txt
+语法作用 写法
+允许所有搜索引擎访问网站的所有部分或者建立一个空白的文本文档，命名为robots.txt User-agent: *Disallow:或者User-agent: *Allow: /
+禁止所有搜索引擎访问网站的所有部分 User-agent: *Disallow: /
+禁止百度索引你的网站 User-agent: BaiduspiderDisallow: /
+禁止Google索引你的网站 User-agent: GooglebotDisallow: /
+禁止除Google外的一切搜索引擎索引你的网站 User-agent: GooglebotDisallow:User-agent: *Disallow: /
+禁止除百度外的一切搜索引擎索引你的网站 User-agent: BaiduspiderDisallow:User-agent: *Disallow: /
+禁止蜘蛛访问某个目录（例如禁止admin\css\images被索引） User-agent: *Disallow: /css/Disallow: /admin/Disallow: /images/
+允许访问某个目录中的某些特定网址 User-agent: *Allow: /css/myAllow: /admin/htmlAllow: /images/indexDisallow: /css/Disallow: /admin/Disallow: /images/
+使用“*”，限制访问某个后缀的域名例如索引访问admin目录下所有ASP的文件 User-agent: *Disallow: /admin/*.htm
+使用“$”仅允许访问某目录下某个后缀的文件 User-agent: *Allow: .asp$Disallow: /
+禁止索引网站中所有的动态页面（这里限制的是有“?”的域名，例如index.asp?id=1） User-agent: *Disallow: /*?*
+
+Excel 单元合并：=A12&"."&B12
+
